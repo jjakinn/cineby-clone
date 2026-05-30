@@ -184,18 +184,32 @@ async function init() {
     // Show loading state
     document.getElementById('top10').innerHTML = '<div class="loading">Loading...</div>';
     document.getElementById('trending').innerHTML = '<div class="loading">Loading...</div>';
+    document.getElementById('newReleases').innerHTML = '<div class="loading">Loading...</div>';
+    document.getElementById('comingSoon').innerHTML = '<div class="loading">Loading...</div>';
     
     // Fetch all sections in parallel
-    const [trending, popular, topRated, netflix] = await Promise.all([
+    const [trending, popular, topRated, netflix, newReleases, comingSoon] = await Promise.all([
         fetchAPI('/trending/all/day'),
         fetchAPI('/movie/popular'),
         fetchAPI('/movie/top_rated'),
-        fetchAPI('/discover/movie?with_watch_providers=8&watch_region=US') // Netflix
+        fetchAPI('/discover/movie?with_watch_providers=8&watch_region=US'), // Netflix
+        fetchAPI('/movie/now_playing'),
+        fetchAPI('/movie/upcoming')
     ]);
     
     // TOP 10 from trending
     if (trending?.results) {
         renderSection('top10', trending.results.slice(0, 10), true);
+    }
+    
+    // New Releases - now playing in theaters
+    if (newReleases?.results) {
+        renderSection('newReleases', newReleases.results);
+    }
+    
+    // Coming Soon - upcoming movies
+    if (comingSoon?.results) {
+        renderSection('comingSoon', comingSoon.results);
     }
     
     // Trending Today - movies only
