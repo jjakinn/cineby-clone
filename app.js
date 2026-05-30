@@ -28,7 +28,7 @@ async function fetchAPI(endpoint) {
     }
 }
 
-// Create card HTML
+// Create card HTML - uses data attributes to avoid inline onclick escaping issues
 function createCard(movie, index, isTop10 = false) {
     const poster = getImageUrl(movie.poster_path, 'w342');
     const rankBadge = isTop10 ? `<span class="rank-badge">${String(index + 1).padStart(2, '0')}</span>` : '';
@@ -38,12 +38,13 @@ function createCard(movie, index, isTop10 = false) {
     const year = (movie.release_date || movie.first_air_date || '').slice(0, 4);
     const rating = movie.vote_average ? movie.vote_average.toFixed(1) : '0.0';
     const displayType = type === 'tv' ? 'TV Show' : 'Movie';
+    const desc = (movie.overview || '').slice(0, 200);
     
     return `
-        <div class="${cardClass}" data-id="${movie.id}" data-type="${type}" onclick="openPlayer({id: ${movie.id}, type: '${type}', title: '${title.replace(/'/g, "\\'")}', rating: '${rating}', year: '${year}', desc: '${(movie.overview || '').replace(/'/g, "\\'").slice(0, 200)}', poster: '${poster}'})">
+        <div class="${cardClass}" data-id="${movie.id}" data-type="${type}" data-title="${escapeHtml(title)}" data-rating="${rating}" data-year="${year}" data-desc="${escapeHtml(desc)}" data-poster="${poster}">
             <div class="card-image">
                 ${rankBadge}
-                <img src="${poster}" alt="${title}" loading="lazy" onerror="this.src='https://via.placeholder.com/342x513/1a1a1a/666?text=${encodeURIComponent(title)}'">
+                <img src="${poster}" alt="${escapeHtml(title)}" loading="lazy" onerror="this.src='https://via.placeholder.com/342x513/1a1a1a/666?text=${encodeURIComponent(title)}'">
                 <div class="card-overlay">
                     <div class="play-overlay">
                         <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
@@ -51,7 +52,7 @@ function createCard(movie, index, isTop10 = false) {
                 </div>
             </div>
             <div class="card-info">
-                <h3 class="card-title">${title}</h3>
+                <h3 class="card-title">${escapeHtml(title)}</h3>
                 <div class="card-meta">
                     <span class="card-rating">${rating}</span>
                     <span class="card-year">${year}</span>
@@ -62,12 +63,39 @@ function createCard(movie, index, isTop10 = false) {
     `;
 }
 
+// Escape HTML for data attributes
+function escapeHtml(str) {
+    if (!str) return '';
+    return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
 // Render sections
 function renderSection(containerId, movies, isTop10 = false) {
     const container = document.getElementById(containerId);
     if (!container || !movies) return;
     container.innerHTML = movies.slice(0, 10).map((movie, index) => createCard(movie, index, isTop10)).join('');
 }
+
+// Handle card clicks via event delegation
+document.addEventListener('click', (e) => {
+    const card = e.target.closest('.movie-card');
+    if (!card) return;
+    
+    const id = parseInt(card.dataset.id, 10);
+    const type = card.dataset.type;
+    const title = card.dataset.title;
+    const rating = card.dataset.rating;
+    const year = card.dataset.year;
+    const desc = card.dataset.desc;
+    const poster = card.dataset.poster;
+    
+    openPlayer({ id, type, title, rating, year, desc, poster });
+});
 
 // Vidking Player URL builder
 function getVidkingUrl(tmdbId, type = 'movie', season = 1, episode = 1) {
