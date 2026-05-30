@@ -605,6 +605,79 @@ body {
     color: var(--text-secondary);
 }
 
+/* Hero Carousel Navigation */
+.hero-nav {
+    position: absolute;
+    bottom: 40px;
+    right: 48px;
+    display: flex;
+    gap: 12px;
+    z-index: 5;
+}
+
+.hero-nav-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+    backdrop-filter: blur(4px);
+}
+
+.hero-nav-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.1);
+}
+
+.hero-nav-btn svg {
+    width: 20px;
+    height: 20px;
+    fill: currentColor;
+}
+
+.hero-dots {
+    position: absolute;
+    bottom: 52px;
+    left: 48px;
+    display: flex;
+    gap: 8px;
+    z-index: 5;
+}
+
+.hero-dot {
+    width: 32px;
+    height: 3px;
+    border-radius: 2px;
+    background: rgba(255, 255, 255, 0.3);
+    border: none;
+    cursor: pointer;
+    transition: var(--transition);
+    padding: 0;
+}
+
+.hero-dot.active {
+    background: var(--accent-red);
+    width: 48px;
+}
+
+.hero-dot:hover {
+    background: rgba(255, 255, 255, 0.6);
+}
+
+.hero-img {
+    transition: opacity 0.5s ease;
+}
+
+.hero-backdrop {
+    transition: opacity 0.5s ease;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .header {

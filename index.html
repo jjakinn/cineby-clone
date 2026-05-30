@@ -37,21 +37,21 @@
         </div>
     </header>
 
-    <!-- Hero Section -->
-    <section class="hero">
-        <div class="hero-backdrop">
-            <img src="https://images.unsplash.com/photo-1518676590629-3dcbd9c5a5c9?w=1920&h=1080&fit=crop" alt="Hero Background" class="hero-img">
+    <!-- Hero Carousel -->
+    <section class="hero" id="heroCarousel">
+        <div class="hero-backdrop" id="heroBackdrop">
+            <img src="" alt="Hero Background" class="hero-img" id="heroImg">
             <div class="hero-gradient"></div>
         </div>
-        <div class="hero-content">
-            <h1 class="hero-title">Loading...</h1>
-            <div class="hero-meta">
+        <div class="hero-content" id="heroContent">
+            <h1 class="hero-title" id="heroTitle">Loading...</h1>
+            <div class="hero-meta" id="heroMeta">
                 <span class="rating">--</span>
                 <span class="year">----</span>
             </div>
-            <p class="hero-desc">Fetching the latest movies and shows...</p>
+            <p class="hero-desc" id="heroDesc">Fetching the latest movies and shows...</p>
             <div class="hero-buttons">
-                <button class="btn btn-play">
+                <button class="btn btn-play" id="heroPlay">
                     <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
                     Play
                 </button>
@@ -61,6 +61,15 @@
                 </button>
             </div>
         </div>
+        <div class="hero-nav">
+            <button class="hero-nav-btn prev" id="heroPrev">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+            </button>
+            <button class="hero-nav-btn next" id="heroNext">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
+            </button>
+        </div>
+        <div class="hero-dots" id="heroDots"></div>
     </section>
 
     <!-- TOP 10 Today -->

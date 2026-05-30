@@ -220,10 +220,9 @@ async function init() {
         renderSection('comedy', comedy.results);
     }
     
-    // Set hero from first trending item
+    // Set up hero carousel with top 10 trending
     if (trending?.results?.[0]) {
-        const hero = trending.results[0];
-        updateHero(hero);
+        initHeroCarousel(trending.results.slice(0, 10));
     }
     
     // Tab switching
@@ -288,6 +287,105 @@ async function init() {
     }
 }
 
+let heroCarousel = {
+    movies: [],
+    currentIndex: 0,
+    autoPlayInterval: null,
+    isPlaying: true
+};
+
+function initHeroCarousel(movies) {
+    if (!movies || movies.length === 0) return;
+    
+    heroCarousel.movies = movies.slice(0, 10);
+    heroCarousel.currentIndex = 0;
+    
+    // Create dots
+    const dotsContainer = document.getElementById('heroDots');
+    if (dotsContainer) {
+        dotsContainer.innerHTML = heroCarousel.movies.map((_, i) => 
+            `<button class="hero-dot ${i === 0 ? 'active' : ''}" data-index="${i}"></button>`
+        ).join('');
+        
+        // Add click handlers to dots
+        dotsContainer.querySelectorAll('.hero-dot').forEach(dot => {
+            dot.addEventListener('click', () => {
+                const index = parseInt(dot.dataset.index, 10);
+                showHeroMovie(index);
+                resetAutoPlay();
+            });
+        });
+    }
+    
+    // Show first movie
+    showHeroMovie(0);
+    
+    // Start auto-play
+    startAutoPlay();
+    
+    // Pause on hover
+    const heroSection = document.getElementById('heroCarousel');
+    if (heroSection) {
+        heroSection.addEventListener('mouseenter', stopAutoPlay);
+        heroSection.addEventListener('mouseleave', startAutoPlay);
+    }
+    
+    // Add nav button handlers
+    const prevBtn = document.getElementById('heroPrev');
+    const nextBtn = document.getElementById('heroNext');
+    
+    if (prevBtn) {
+        prevBtn.addEventListener('click', () => {
+            const newIndex = (heroCarousel.currentIndex - 1 + heroCarousel.movies.length) % heroCarousel.movies.length;
+            showHeroMovie(newIndex);
+            resetAutoPlay();
+        });
+    }
+    
+    if (nextBtn) {
+        nextBtn.addEventListener('click', () => {
+            const newIndex = (heroCarousel.currentIndex + 1) % heroCarousel.movies.length;
+            showHeroMovie(newIndex);
+            resetAutoPlay();
+        });
+    }
+}
+
+function showHeroMovie(index) {
+    if (!heroCarousel.movies[index]) return;
+    
+    heroCarousel.currentIndex = index;
+    const movie = heroCarousel.movies[index];
+    
+    updateHero(movie);
+    
+    // Update dots
+    const dots = document.querySelectorAll('.hero-dot');
+    dots.forEach((dot, i) => {
+        dot.classList.toggle('active', i === index);
+    });
+}
+
+function startAutoPlay() {
+    if (heroCarousel.autoPlayInterval) clearInterval(heroCarousel.autoPlayInterval);
+    heroCarousel.autoPlayInterval = setInterval(() => {
+        const newIndex = (heroCarousel.currentIndex + 1) % heroCarousel.movies.length;
+        showHeroMovie(newIndex);
+    }, 6000); // Change every 6 seconds
+}
+
+function resetAutoPlay() {
+    if (heroCarousel.autoPlayInterval) clearInterval(heroCarousel.autoPlayInterval);
+    startAutoPlay();
+}
+
+function stopAutoPlay() {
+    if (heroCarousel.autoPlayInterval) {
+        clearInterval(heroCarousel.autoPlayInterval);
+        heroCarousel.autoPlayInterval = null;
+    }
+}
+
 // Update hero section with real movie data
 function updateHero(movie) {
     const type = movie.media_type || (movie.first_air_date ? 'tv' : 'movie');
@@ -298,16 +396,20 @@ function updateHero(movie) {
     const poster = getImageUrl(movie.poster_path, 'w500');
     
     // Update hero background
-    const heroImg = document.querySelector('.hero-img');
+    const heroImg = document.getElementById('heroImg');
     if (heroImg && backdrop) {
-        heroImg.src = backdrop;
+        heroImg.style.opacity = '0';
+        setTimeout(() => {
+            heroImg.src = backdrop;
+            heroImg.style.opacity = '1';
+        }, 200);
     }
     
     // Update hero content
-    const heroTitle = document.querySelector('.hero-title');
-    const heroMeta = document.querySelector('.hero-meta');
-    const heroDesc = document.querySelector('.hero-desc');
-    const playBtn = document.querySelector('.hero .btn-play');
+    const heroTitle = document.getElementById('heroTitle');
+    const heroMeta = document.getElementById('heroMeta');
+    const heroDesc = document.getElementById('heroDesc');
+    const playBtn = document.getElementById('heroPlay');
     
     if (heroTitle) heroTitle.textContent = title.toUpperCase();
     if (heroMeta) {
