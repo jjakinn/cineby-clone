@@ -221,7 +221,6 @@ async function openPlayer(movie) {
     
     const url = getVidkingUrl(movie.id, type, 1, 1);
     
-    iframe.removeAttribute('sandbox');
     iframe.src = url;
     title.textContent = movie.title;
     meta.innerHTML = `
