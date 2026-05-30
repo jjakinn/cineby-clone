@@ -125,6 +125,16 @@
                 <div class="detail-meta" id="detailMeta"></div>
                 <p id="detailDesc"></p>
             </div>
+            <div class="season-episode-selector" id="seasonEpisodeSelector" style="display:none;">
+                <div class="selector-row">
+                    <label>Season</label>
+                    <select id="seasonSelect"></select>
+                </div>
+                <div class="selector-row">
+                    <label>Episode</label>
+                    <select id="episodeSelect"></select>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -185,6 +195,24 @@
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') closePlayer();
         });
+        
+        // Season/Episode selector listeners
+        const seasonSelect = document.getElementById('seasonSelect');
+        const episodeSelect = document.getElementById('episodeSelect');
+        
+        if (seasonSelect) {
+            seasonSelect.addEventListener('change', () => {
+                currentPlayback.season = parseInt(seasonSelect.value, 10);
+                updatePlayerSource();
+            });
+        }
+        
+        if (episodeSelect) {
+            episodeSelect.addEventListener('change', () => {
+                currentPlayback.episode = parseInt(episodeSelect.value, 10);
+                updatePlayerSource();
+            });
+        }
         
         // Load on page load
         loadBrowse();

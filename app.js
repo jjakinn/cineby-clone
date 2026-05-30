@@ -77,6 +77,47 @@ function getVidkingUrl(tmdbId, type = 'movie', season = 1, episode = 1) {
     return `https://www.vidking.net/embed/movie/${tmdbId}?color=e50914&autoPlay=true`;
 }
 
+// Current playback state
+let currentPlayback = { id: null, type: 'movie', season: 1, episode: 1, title: '' };
+
+// Populate season/episode selectors
+function populateSelectors(seasons = 10, episodes = 30) {
+    const seasonSelect = document.getElementById('seasonSelect');
+    const episodeSelect = document.getElementById('episodeSelect');
+    if (!seasonSelect || !episodeSelect) return;
+    
+    seasonSelect.innerHTML = '';
+    episodeSelect.innerHTML = '';
+    
+    for (let s = 1; s <= seasons; s++) {
+        const opt = document.createElement('option');
+        opt.value = s;
+        opt.textContent = `Season ${s}`;
+        seasonSelect.appendChild(opt);
+    }
+    
+    for (let e = 1; e <= episodes; e++) {
+        const opt = document.createElement('option');
+        opt.value = e;
+        opt.textContent = `Episode ${e}`;
+        episodeSelect.appendChild(opt);
+    }
+}
+
+// Update player URL based on current selections
+function updatePlayerSource() {
+    const iframe = document.getElementById('vidkingPlayer');
+    if (!iframe || !currentPlayback.id) return;
+    
+    const url = getVidkingUrl(
+        currentPlayback.id, 
+        currentPlayback.type, 
+        currentPlayback.season, 
+        currentPlayback.episode
+    );
+    iframe.src = url;
+}
+
 // Open player modal
 function openPlayer(movie) {
     const modal = document.getElementById('playerModal');
@@ -84,9 +125,34 @@ function openPlayer(movie) {
     const title = document.getElementById('detailTitle');
     const meta = document.getElementById('detailMeta');
     const desc = document.getElementById('detailDesc');
+    const seSelector = document.getElementById('seasonEpisodeSelector');
     
     const type = movie.type === 'tv' || movie.type === 'TV Show' ? 'tv' : 'movie';
-    const url = getVidkingUrl(movie.id, type);
+    
+    // Store current playback state
+    currentPlayback = {
+        id: movie.id,
+        type: type,
+        season: 1,
+        episode: 1,
+        title: movie.title
+    };
+    
+    // Show/hide season/episode selector
+    if (seSelector) {
+        seSelector.style.display = type === 'tv' ? 'flex' : 'none';
+    }
+    
+    // Populate selectors for TV shows
+    if (type === 'tv') {
+        populateSelectors(10, 30); // Default max seasons/episodes
+        const seasonSelect = document.getElementById('seasonSelect');
+        const episodeSelect = document.getElementById('episodeSelect');
+        if (seasonSelect) seasonSelect.value = 1;
+        if (episodeSelect) episodeSelect.value = 1;
+    }
+    
+    const url = getVidkingUrl(movie.id, type, 1, 1);
     
     iframe.removeAttribute('sandbox');
     iframe.src = url;
@@ -110,6 +176,7 @@ function closePlayer() {
     modal.classList.remove('active');
     iframe.src = '';
     document.body.style.overflow = '';
+    currentPlayback = { id: null, type: 'movie', season: 1, episode: 1, title: '' };
 }
 
 // Initialize - fetch real data from Cineby API
@@ -201,6 +268,24 @@ async function init() {
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') closePlayer();
     });
+    
+    // Season/Episode selector listeners
+    const seasonSelect = document.getElementById('seasonSelect');
+    const episodeSelect = document.getElementById('episodeSelect');
+    
+    if (seasonSelect) {
+        seasonSelect.addEventListener('change', () => {
+            currentPlayback.season = parseInt(seasonSelect.value, 10);
+            updatePlayerSource();
+        });
+    }
+    
+    if (episodeSelect) {
+        episodeSelect.addEventListener('change', () => {
+            currentPlayback.episode = parseInt(episodeSelect.value, 10);
+            updatePlayerSource();
+        });
+    }
 }
 
 // Update hero section with real movie data
