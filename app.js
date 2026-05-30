@@ -1,4 +1,4 @@
-// Cineby Clone - Fetches real data from Cineby's open API
+// Vivid Movies - Fetches real data from Cineby's open API
 const API_BASE = 'https://db.videasy.net/3';
 
 // Image proxy used by Cineby
@@ -116,9 +116,16 @@ async function populateSelectorsForShow(tmdbId) {
         return;
     }
     
-    // Filter out specials (season 0) and sort by season number
+    const now = new Date().toISOString().split('T')[0];
+    
+    // Filter out specials, future seasons, and seasons with 0 episodes
     const seasons = showData.seasons
-        .filter(s => s.season_number > 0)
+        .filter(s => {
+            if (s.season_number <= 0) return false;
+            if (!s.episode_count || s.episode_count === 0) return false;
+            if (s.air_date && s.air_date > now) return false;
+            return true;
+        })
         .sort((a, b) => a.season_number - b.season_number);
     
     seasonSelect.innerHTML = '';
