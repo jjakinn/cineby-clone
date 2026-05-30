@@ -10,7 +10,6 @@
     <style>
         .browse-page { padding-top: 80px; min-height: 100vh; }
 
-        /* Type Selector */
         .type-selector {
             display: flex;
             flex-direction: column;
@@ -116,10 +115,12 @@
             white-space: nowrap;
             font-family: 'Inter', sans-serif;
         }
+
         .filter-btn:hover {
             background: rgba(255,255,255,0.08);
             color: var(--text-primary);
         }
+
         .filter-btn.active {
             background: var(--accent-red);
             color: white;
@@ -132,12 +133,14 @@
             gap: 16px;
             padding: 24px 48px;
         }
+
         .loading-more {
             text-align: center;
             padding: 40px;
             color: var(--text-muted);
             font-size: 14px;
         }
+
         .end-message {
             text-align: center;
             padding: 40px;
@@ -148,6 +151,8 @@
         @media (max-width: 768px) {
             .browse-filters { padding: 16px; }
             .movie-grid { padding: 16px; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+            .type-cards { flex-direction: column; align-items: center; }
+            .type-card { max-width: 100%; width: 100%; }
         }
     </style>
 </head>
@@ -170,27 +175,26 @@
     </header>
 
     <main class="browse-page">
-        <!-- Type Selector (initial screen) -->
         <div class="type-selector" id="typeSelector">
             <h1 class="selector-title">What are you looking for?</h1>
             <div class="type-cards">
                 <button class="type-card" data-type="all">
                     <div class="type-icon">
-                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 6h18v2H4zm0 5h18v2H4zm0 5h18v2H4zm-4-10h2v2H0zm0 5h2v2H0zm0 5h2v2H0z"/></svg>
+                        <svg viewBox="0 0 24 24"><path d="M4 6h18v2H4zm0 5h18v2H4zm0 5h18v2H4zm-4-10h2v2H0zm0 5h2v2H0zm0 5h2v2H0z"/></svg>
                     </div>
                     <span class="type-label">All</span>
                     <span class="type-desc">Movies & TV Shows</span>
                 </button>
                 <button class="type-card" data-type="movie">
                     <div class="type-icon">
-                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18 4l2 4h-3l-2-4h-2l2 4h-3l-2-4H8l2 4H7L5 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4h-4z"/></svg>
+                        <svg viewBox="0 0 24 24"><path d="M18 4l2 4h-3l-2-4h-2l2 4h-3l-2-4H8l2 4H7L5 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4h-4z"/></svg>
                     </div>
                     <span class="type-label">Movies</span>
                     <span class="type-desc">Feature films & cinema</span>
                 </button>
                 <button class="type-card" data-type="tv">
                     <div class="type-icon">
-                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 3H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h5v2h8v-2h5c1.1 0 1.99-.9 1.99-2L23 5c0-1.1-.9-2-2-2zm0 14H3V5h18v12z"/></svg>
+                        <svg viewBox="0 0 24 24"><path d="M21 3H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h5v2h8v-2h5c1.1 0 1.99-.9 1.99-2L23 5c0-1.1-.9-2-2-2zm0 14H3V5h18v12z"/></svg>
                     </div>
                     <span class="type-label">TV Shows</span>
                     <span class="type-desc">Series & episodes</span>
@@ -198,7 +202,6 @@
             </div>
         </div>
 
-        <!-- Filters (hidden until type is picked) -->
         <div class="browse-filters" id="browseFilters" style="display:none;">
             <div class="filter-group" id="sortFilters">
                 <button class="filter-btn active" data-sort="popular">Most Popular</button>
@@ -263,9 +266,9 @@
     <script src="app.js"></script>
     <script>
         let browseState = {
-            type: null,        // all | movie | tv — null until picked
-            sort: 'popular',   // popular | top_rated | latest
-            genre: 'all',      // all | genre_id
+            type: null,
+            sort: 'popular',
+            genre: 'all',
             page: 1,
             isLoading: false,
             hasMore: true,
@@ -275,11 +278,29 @@
         async function buildEndpoint() {
             const { type, sort, genre, page } = browseState;
             let endpoint = '';
+            let params = `?page=${page}`;
 
+            // When genre is selected, use discover endpoint (server-side filtering)
+            if (genre !== 'all') {
+                if (type === 'tv') {
+                    endpoint = '/discover/tv';
+                    params += `&with_genres=${genre}&sort_by=popularity.desc`;
+                    if (sort === 'top_rated') params = params.replace('popularity.desc', 'vote_average.desc');
+                    if (sort === 'latest') params = params.replace('popularity.desc', 'first_air_date.desc');
+                } else {
+                    endpoint = '/discover/movie';
+                    params += `&with_genres=${genre}&sort_by=popularity.desc`;
+                    if (sort === 'top_rated') params = params.replace('popularity.desc', 'vote_average.desc');
+                    if (sort === 'latest') params = params.replace('popularity.desc', 'release_date.desc');
+                }
+                return endpoint + params;
+            }
+
+            // No genre - use regular endpoints
             if (type === 'all') {
                 if (sort === 'popular') endpoint = '/trending/all/day';
                 else if (sort === 'top_rated') endpoint = '/movie/top_rated';
-                else endpoint = '/trending/all/day';
+                else endpoint = '/movie/now_playing';
             } else if (type === 'movie') {
                 if (sort === 'popular') endpoint = '/movie/popular';
                 else if (sort === 'top_rated') endpoint = '/movie/top_rated';
@@ -288,11 +309,6 @@
                 if (sort === 'popular') endpoint = '/tv/popular';
                 else if (sort === 'top_rated') endpoint = '/tv/top_rated';
                 else endpoint = '/tv/airing_today';
-            }
-
-            let params = `?page=${page}`;
-            if (genre !== 'all') {
-                params += `&with_genres=${genre}`;
             }
 
             return endpoint + params;
@@ -319,11 +335,8 @@
                     }
                 });
 
+                // Genre filtered server-side by discover endpoint — no client-side filter needed
                 let movies = data.results;
-                if (browseState.genre !== 'all') {
-                    const genreId = parseInt(browseState.genre, 10);
-                    movies = movies.filter(m => m.genre_ids && m.genre_ids.includes(genreId));
-                }
 
                 const existingIds = new Set(browseState.allMovies.map(m => m.id));
                 const newMovies = movies.filter(m => !existingIds.has(m.id));
