@@ -88,8 +88,7 @@ function openPlayer(movie) {
     const type = movie.type === 'tv' || movie.type === 'TV Show' ? 'tv' : 'movie';
     const url = getVidkingUrl(movie.id, type);
     
-    // Add sandbox to prevent redirects
-    iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-presentation allow-fullscreen');
+    iframe.removeAttribute('sandbox');
     iframe.src = url;
     title.textContent = movie.title;
     meta.innerHTML = `
