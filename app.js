@@ -80,28 +80,92 @@ function getVidkingUrl(tmdbId, type = 'movie', season = 1, episode = 1) {
 // Current playback state
 let currentPlayback = { id: null, type: 'movie', season: 1, episode: 1, title: '' };
 
-// Populate season/episode selectors
-function populateSelectors(seasons = 10, episodes = 30) {
+// Cached TV show data for currently opened show
+let currentTVData = null;
+
+// Fetch TV show details to get real season/episode data
+async function fetchTVDetails(tmdbId) {
+    return await fetchAPI(`/tv/${tmdbId}`);
+}
+
+// Populate season/episode selectors with ACTUAL data from the show
+async function populateSelectorsForShow(tmdbId) {
     const seasonSelect = document.getElementById('seasonSelect');
     const episodeSelect = document.getElementById('episodeSelect');
     if (!seasonSelect || !episodeSelect) return;
     
-    seasonSelect.innerHTML = '';
-    episodeSelect.innerHTML = '';
+    const showData = await fetchTVDetails(tmdbId);
+    currentTVData = showData;
     
-    for (let s = 1; s <= seasons; s++) {
-        const opt = document.createElement('option');
-        opt.value = s;
-        opt.textContent = `Season ${s}`;
-        seasonSelect.appendChild(opt);
+    if (!showData || !showData.seasons || showData.seasons.length === 0) {
+        // Fallback: use defaults if API fails
+        seasonSelect.innerHTML = '';
+        episodeSelect.innerHTML = '';
+        for (let s = 1; s <= 10; s++) {
+            const opt = document.createElement('option');
+            opt.value = s;
+            opt.textContent = `Season ${s}`;
+            seasonSelect.appendChild(opt);
+        }
+        for (let e = 1; e <= 30; e++) {
+            const opt = document.createElement('option');
+            opt.value = e;
+            opt.textContent = `Episode ${e}`;
+            episodeSelect.appendChild(opt);
+        }
+        return;
     }
     
-    for (let e = 1; e <= episodes; e++) {
+    // Filter out specials (season 0) and sort by season number
+    const seasons = showData.seasons
+        .filter(s => s.season_number > 0)
+        .sort((a, b) => a.season_number - b.season_number);
+    
+    seasonSelect.innerHTML = '';
+    seasons.forEach(season => {
+        const opt = document.createElement('option');
+        opt.value = season.season_number;
+        opt.textContent = season.name || `Season ${season.season_number}`;
+        seasonSelect.appendChild(opt);
+    });
+    
+    // Populate episodes for the first season
+    episodeSelect.innerHTML = '';
+    if (seasons.length > 0) {
+        const epCount = seasons[0].episode_count || 1;
+        for (let e = 1; e <= epCount; e++) {
+            const opt = document.createElement('option');
+            opt.value = e;
+            opt.textContent = `Episode ${e}`;
+            episodeSelect.appendChild(opt);
+        }
+    }
+    
+    seasonSelect.value = 1;
+    episodeSelect.value = 1;
+}
+
+// Update episode count when season changes
+function updateEpisodeCountForSeason(seasonNum) {
+    const episodeSelect = document.getElementById('episodeSelect');
+    if (!episodeSelect || !currentTVData || !currentTVData.seasons) return;
+    
+    const season = currentTVData.seasons.find(s => s.season_number === seasonNum);
+    if (!season) return;
+    
+    const currentEpisode = parseInt(episodeSelect.value, 10) || 1;
+    const epCount = season.episode_count || 1;
+    
+    episodeSelect.innerHTML = '';
+    for (let e = 1; e <= epCount; e++) {
         const opt = document.createElement('option');
         opt.value = e;
         opt.textContent = `Episode ${e}`;
         episodeSelect.appendChild(opt);
     }
+    
+    // Keep current episode if valid, otherwise go to 1
+    episodeSelect.value = currentEpisode <= epCount ? currentEpisode : 1;
 }
 
 // Update player URL based on current selections
@@ -119,7 +183,7 @@ function updatePlayerSource() {
 }
 
 // Open player modal
-function openPlayer(movie) {
+async function openPlayer(movie) {
     const modal = document.getElementById('playerModal');
     const iframe = document.getElementById('vidkingPlayer');
     const title = document.getElementById('detailTitle');
@@ -143,13 +207,9 @@ function openPlayer(movie) {
         seSelector.style.display = type === 'tv' ? 'flex' : 'none';
     }
     
-    // Populate selectors for TV shows
+    // Populate selectors with REAL data for TV shows
     if (type === 'tv') {
-        populateSelectors(10, 30); // Default max seasons/episodes
-        const seasonSelect = document.getElementById('seasonSelect');
-        const episodeSelect = document.getElementById('episodeSelect');
-        if (seasonSelect) seasonSelect.value = 1;
-        if (episodeSelect) episodeSelect.value = 1;
+        await populateSelectorsForShow(movie.id);
     }
     
     const url = getVidkingUrl(movie.id, type, 1, 1);
@@ -177,6 +237,7 @@ function closePlayer() {
     iframe.src = '';
     document.body.style.overflow = '';
     currentPlayback = { id: null, type: 'movie', season: 1, episode: 1, title: '' };
+    currentTVData = null;
 }
 
 // Initialize - fetch real data from Cineby API
@@ -274,7 +335,12 @@ async function init() {
     
     if (seasonSelect) {
         seasonSelect.addEventListener('change', () => {
-            currentPlayback.season = parseInt(seasonSelect.value, 10);
+            const seasonNum = parseInt(seasonSelect.value, 10);
+            currentPlayback.season = seasonNum;
+            // Update episode count for this season
+            updateEpisodeCountForSeason(seasonNum);
+            // Update episode to 1 or current valid episode
+            currentPlayback.episode = parseInt(episodeSelect.value, 10) || 1;
             updatePlayerSource();
         });
     }
