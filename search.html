@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search - Cineby</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        .search-page { padding-top: 80px; min-height: 100vh; }
+        .search-header {
+            padding: 48px;
+            text-align: center;
+        }
+        .search-title {
+            font-size: 36px;
+            font-weight: 800;
+            margin-bottom: 24px;
+        }
+        .search-box {
+            max-width: 600px;
+            margin: 0 auto;
+            position: relative;
+        }
+        .search-input {
+            width: 100%;
+            padding: 16px 24px 16px 52px;
+            background: var(--bg-card);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-size: 16px;
+            font-family: 'Inter', sans-serif;
+            outline: none;
+            transition: var(--transition);
+        }
+        .search-input:focus {
+            border-color: var(--accent-red);
+            box-shadow: 0 0 0 3px rgba(229, 9, 20, 0.2);
+        }
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+        .search-icon {
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            width: 20px;
+            height: 20px;
+        }
+        .search-results {
+            padding: 24px 48px 48px;
+        }
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 16px;
+        }
+        .no-results {
+            text-align: center;
+            padding: 60px 24px;
+            color: var(--text-muted);
+        }
+        .no-results h3 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+        .no-results p {
+            font-size: 14px;
+        }
+        .section-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: 0 48px;
+            margin-bottom: 16px;
+        }
+        .trending-searches {
+            padding: 0 48px;
+            margin-bottom: 32px;
+        }
+        .trending-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .trending-tag {
+            padding: 8px 16px;
+            background: var(--bg-card);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 20px;
+            color: var(--text-secondary);
+            font-size: 13px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .trending-tag:hover {
+            background: rgba(229, 9, 20, 0.15);
+            color: var(--accent-red);
+            border-color: rgba(229, 9, 20, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-left">
+            <a href="index.html" class="logo">
+                <svg class="logo-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M8 5v14l11-7z"/>
+                </svg>
+                <span class="logo-text">Cineby</span>
+            </a>
+            <nav class="nav">
+                <a href="index.html" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+                    Home
+                </a>
+                <a href="browse.html" class="nav-link">Browse</a>
+                <a href="search.html" class="nav-link active">Search</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="search-page">
+        <div class="search-header">
+            <h1 class="search-title">Find your next watch</h1>
+            <div class="search-box">
+                <svg class="search-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+                </svg>
+                <input type="text" class="search-input" id="searchInput" placeholder="Search movies, TV shows..." autocomplete="off">
+            </div>
+        </div>
+
+        <div class="trending-searches" id="trendingSearches">
+            <div class="section-label">Trending Searches</div>
+            <div class="trending-tags">
+                <span class="trending-tag" onclick="doSearch('Spider-Noir')">Spider-Noir</span>
+                <span class="trending-tag" onclick="doSearch('Backrooms')">Backrooms</span>
+                <span class="trending-tag" onclick="doSearch('The Boys')">The Boys</span>
+                <span class="trending-tag" onclick="doSearch('Stranger Things')">Stranger Things</span>
+                <span class="trending-tag" onclick="doSearch('Oppenheimer')">Oppenheimer</span>
+                <span class="trending-tag" onclick="doSearch('Dune')">Dune</span>
+                <span class="trending-tag" onclick="doSearch('Wednesday')">Wednesday</span>
+                <span class="trending-tag" onclick="doSearch('The Last of Us')">The Last of Us</span>
+            </div>
+        </div>
+
+        <div class="search-results" id="searchResults">
+            <div class="no-results">
+                <h3>Start typing to search</h3>
+                <p>Find movies and TV shows from our catalog</p>
+            </div>
+        </div>
+    </main>
+
+    <div id="playerModal" class="modal">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content">
+            <button class="modal-close" id="modalClose">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+            </button>
+            <div class="player-wrapper">
+                <iframe id="vidkingPlayer" src="" width="100%" height="100%" frameborder="0" allowfullscreen allow="autoplay; fullscreen"></iframe>
+            </div>
+            <div class="movie-details" id="movieDetails">
+                <h2 id="detailTitle"></h2>
+                <div class="detail-meta" id="detailMeta"></div>
+                <p id="detailDesc"></p>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+        let searchTimeout;
+        
+        async function doSearch(query) {
+            const input = document.getElementById('searchInput');
+            input.value = query;
+            
+            const results = document.getElementById('searchResults');
+            const trending = document.getElementById('trendingSearches');
+            
+            if (!query.trim()) {
+                results.innerHTML = `
+                    <div class="no-results">
+                        <h3>Start typing to search</h3>
+                        <p>Find movies and TV shows from our catalog</p>
+                    </div>
+                `;
+                trending.style.display = 'block';
+                return;
+            }
+            
+            trending.style.display = 'none';
+            results.innerHTML = '<div class="loading-more">Searching...</div>';
+            
+            // Search movies and TV in parallel
+            const [movieRes, tvRes] = await Promise.all([
+                fetchAPI(`/search/movie?query=${encodeURIComponent(query)}`),
+                fetchAPI(`/search/tv?query=${encodeURIComponent(query)}`)
+            ]);
+            
+            let movies = [];
+            if (movieRes?.results) {
+                movieRes.results.forEach(m => m.media_type = 'movie');
+                movies.push(...movieRes.results);
+            }
+            if (tvRes?.results) {
+                tvRes.results.forEach(m => m.media_type = 'tv');
+                movies.push(...tvRes.results);
+            }
+            
+            // Sort by popularity
+            movies.sort((a, b) => b.popularity - a.popularity);
+            
+            if (movies.length === 0) {
+                results.innerHTML = `
+                    <div class="no-results">
+                        <h3>No results found</h3>
+                        <p>Try a different search term</p>
+                    </div>
+                `;
+            } else {
+                results.innerHTML = `
+                    <div class="section-label">${movies.length} Result${movies.length > 1 ? 's' : ''}</div>
+                    <div class="results-grid">
+                        ${movies.map((m, i) => createCard(m, i)).join('')}
+                    </div>
+                `;
+            }
+        }
+        
+        // Debounced search
+        const input = document.getElementById('searchInput');
+        input.addEventListener('input', (e) => {
+            clearTimeout(searchTimeout);
+            const query = e.target.value;
+            if (!query.trim()) {
+                document.getElementById('searchResults').innerHTML = `
+                    <div class="no-results">
+                        <h3>Start typing to search</h3>
+                        <p>Find movies and TV shows from our catalog</p>
+                    </div>
+                `;
+                document.getElementById('trendingSearches').style.display = 'block';
+                return;
+            }
+            searchTimeout = setTimeout(() => doSearch(query), 400);
+        });
+        
+        // Handle Enter key
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                clearTimeout(searchTimeout);
+                doSearch(input.value);
+            }
+        });
+        
+        // Focus search on load
+        input.focus();
+        
+        // Modal close
+        document.getElementById('modalClose').addEventListener('click', closePlayer);
+        document.getElementById('playerModal').addEventListener('click', (e) => {
+            if (e.target.classList.contains('modal-backdrop')) closePlayer();
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closePlayer();
+        });
+    </script>
+</body>
+</html>

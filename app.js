@@ -70,8 +70,11 @@ function renderSection(containerId, movies, isTop10 = false) {
 }
 
 // Vidking Player URL builder
-function getVidkingUrl(tmdbId, type = 'movie') {
-    return `https://www.vidking.net/embed/${type}/${tmdbId}?color=e50914&autoPlay=true`;
+function getVidkingUrl(tmdbId, type = 'movie', season = 1, episode = 1) {
+    if (type === 'tv') {
+        return `https://www.vidking.net/embed/tv/${tmdbId}/${season}/${episode}?color=e50914&autoPlay=true`;
+    }
+    return `https://www.vidking.net/embed/movie/${tmdbId}?color=e50914&autoPlay=true`;
 }
 
 // Open player modal
@@ -82,14 +85,17 @@ function openPlayer(movie) {
     const meta = document.getElementById('detailMeta');
     const desc = document.getElementById('detailDesc');
     
-    const url = getVidkingUrl(movie.id, movie.type);
+    const type = movie.type === 'tv' || movie.type === 'TV Show' ? 'tv' : 'movie';
+    const url = getVidkingUrl(movie.id, type);
     
+    // Add sandbox to prevent redirects
+    iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-presentation allow-fullscreen');
     iframe.src = url;
     title.textContent = movie.title;
     meta.innerHTML = `
         <span class="rating">${movie.rating}</span>
         <span class="year">${movie.year}</span>
-        <span class="genre">${movie.type === 'tv' ? 'TV Show' : 'Movie'}</span>
+        <span class="genre">${type === 'tv' ? 'TV Show' : 'Movie'}</span>
     `;
     desc.textContent = movie.desc || '';
     

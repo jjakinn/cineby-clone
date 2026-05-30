@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Browse - Cineby</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        .browse-page { padding-top: 80px; }
+        .browse-header {
+            padding: 24px 48px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 24px;
+            flex-wrap: wrap;
+        }
+        .browse-title {
+            font-size: 32px;
+            font-weight: 800;
+        }
+        .filters {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .filter-btn {
+            padding: 8px 20px;
+            background: var(--bg-card);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: var(--text-secondary);
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: var(--transition);
+        }
+        .filter-btn:hover, .filter-btn.active {
+            background: var(--accent-red);
+            color: white;
+            border-color: var(--accent-red);
+        }
+        .movie-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 16px;
+            padding: 0 48px 48px;
+        }
+        .loading-more {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-muted);
+        }
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            padding: 24px 48px;
+        }
+        .page-btn {
+            padding: 8px 16px;
+            background: var(--bg-card);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: var(--text-secondary);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .page-btn:hover, .page-btn.active {
+            background: var(--accent-red);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-left">
+            <a href="index.html" class="logo">
+                <svg class="logo-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M8 5v14l11-7z"/>
+                </svg>
+                <span class="logo-text">Cineby</span>
+            </a>
+            <nav class="nav">
+                <a href="index.html" class="nav-link">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+                    Home
+                </a>
+                <a href="browse.html" class="nav-link active">Browse</a>
+                <a href="search.html" class="nav-link">Search</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="browse-page">
+        <div class="browse-header">
+            <h1 class="browse-title">Browse</h1>
+            <div class="filters">
+                <button class="filter-btn active" data-type="all">All</button>
+                <button class="filter-btn" data-type="movie">Movies</button>
+                <button class="filter-btn" data-type="tv">TV Shows</button>
+            </div>
+        </div>
+        
+        <div class="movie-grid" id="browseGrid">
+            <div class="loading">Loading movies...</div>
+        </div>
+        
+        <div class="pagination" id="pagination"></div>
+    </main>
+
+    <div id="playerModal" class="modal">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content">
+            <button class="modal-close" id="modalClose">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+            </button>
+            <div class="player-wrapper">
+                <iframe id="vidkingPlayer" src="" width="100%" height="100%" frameborder="0" allowfullscreen allow="autoplay; fullscreen"></iframe>
+            </div>
+            <div class="movie-details" id="movieDetails">
+                <h2 id="detailTitle"></h2>
+                <div class="detail-meta" id="detailMeta"></div>
+                <p id="detailDesc"></p>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+        let currentPage = 1;
+        let currentType = 'all';
+        
+        async function loadBrowse(page = 1, type = 'all') {
+            const grid = document.getElementById('browseGrid');
+            grid.innerHTML = '<div class="loading-more">Loading...</div>';
+            
+            let movies = [];
+            
+            if (type === 'all' || type === 'movie') {
+                const movieRes = await fetchAPI('/movie/popular?page=' + page);
+                if (movieRes?.results) movies.push(...movieRes.results);
+            }
+            
+            if (type === 'all' || type === 'tv') {
+                const tvRes = await fetchAPI('/tv/popular?page=' + page);
+                if (tvRes?.results) {
+                    tvRes.results.forEach(m => m.media_type = 'tv');
+                    movies.push(...tvRes.results);
+                }
+            }
+            
+            // Sort by popularity
+            movies.sort((a, b) => b.popularity - a.popularity);
+            
+            grid.innerHTML = movies.map((m, i) => createCard(m, i)).join('');
+            
+            // Pagination
+            const pagination = document.getElementById('pagination');
+            let pages = '';
+            for (let i = 1; i <= 5; i++) {
+                pages += `<button class="page-btn ${i === page ? 'active' : ''}" onclick="loadBrowse(${i}, '${type}')">${i}</button>`;
+            }
+            pagination.innerHTML = pages;
+        }
+        
+        // Filter buttons
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentType = btn.dataset.type;
+                currentPage = 1;
+                loadBrowse(1, currentType);
+            });
+        });
+        
+        // Modal close
+        document.getElementById('modalClose').addEventListener('click', closePlayer);
+        document.getElementById('playerModal').addEventListener('click', (e) => {
+            if (e.target.classList.contains('modal-backdrop')) closePlayer();
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closePlayer();
+        });
+        
+        // Load on page load
+        loadBrowse();
+    </script>
+</body>
+</html>
