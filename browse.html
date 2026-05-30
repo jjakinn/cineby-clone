@@ -8,69 +8,75 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
-        .browse-page { padding-top: 80px; }
-        .browse-header {
+        .browse-page { padding-top: 80px; min-height: 100vh; }
+
+        .browse-filters {
             padding: 24px 48px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            background: rgba(10,10,10,0.8);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            position: sticky;
+            top: 64px;
+            z-index: 100;
+        }
+
+        .filter-group {
             display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 24px;
-            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 12px;
+            overflow-x: auto;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
         }
-        .browse-title {
-            font-size: 32px;
-            font-weight: 800;
-        }
-        .filters {
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
+        .filter-group::-webkit-scrollbar { display: none; }
+        .filter-group:last-child { margin-bottom: 0; }
+
         .filter-btn {
-            padding: 8px 20px;
+            padding: 8px 18px;
             background: var(--bg-card);
-            border: 1px solid rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.08);
             color: var(--text-secondary);
             border-radius: 6px;
             cursor: pointer;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 500;
             transition: var(--transition);
+            white-space: nowrap;
+            font-family: 'Inter', sans-serif;
         }
-        .filter-btn:hover, .filter-btn.active {
+        .filter-btn:hover {
+            background: rgba(255,255,255,0.08);
+            color: var(--text-primary);
+        }
+        .filter-btn.active {
             background: var(--accent-red);
             color: white;
             border-color: var(--accent-red);
         }
+
         .movie-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
             gap: 16px;
-            padding: 0 48px 48px;
+            padding: 24px 48px;
         }
         .loading-more {
             text-align: center;
             padding: 40px;
             color: var(--text-muted);
+            font-size: 14px;
         }
-        .pagination {
-            display: flex;
-            justify-content: center;
-            gap: 8px;
-            padding: 24px 48px;
+        .end-message {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-muted);
+            font-size: 13px;
         }
-        .page-btn {
-            padding: 8px 16px;
-            background: var(--bg-card);
-            border: 1px solid rgba(255,255,255,0.1);
-            color: var(--text-secondary);
-            border-radius: 6px;
-            cursor: pointer;
-            transition: var(--transition);
-        }
-        .page-btn:hover, .page-btn.active {
-            background: var(--accent-red);
-            color: white;
+
+        @media (max-width: 768px) {
+            .browse-filters { padding: 16px; }
+            .movie-grid { padding: 16px; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
         }
     </style>
 </head>
@@ -78,9 +84,7 @@
     <header class="header">
         <div class="header-left">
             <a href="index.html" class="logo">
-                <svg class="logo-icon" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M8 5v14l11-7z"/>
-                </svg>
+                <svg class="logo-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
                 <span class="logo-text">Cineby</span>
             </a>
             <nav class="nav">
@@ -95,20 +99,43 @@
     </header>
 
     <main class="browse-page">
-        <div class="browse-header">
-            <h1 class="browse-title">Browse</h1>
-            <div class="filters">
-                <button class="filter-btn active" data-type="all">All</button>
-                <button class="filter-btn" data-type="movie">Movies</button>
-                <button class="filter-btn" data-type="tv">TV Shows</button>
+        <div class="browse-filters">
+            <div class="filter-group" id="typeFilters">
+                <button class="filter-btn active" data-filter="all">All</button>
+                <button class="filter-btn" data-filter="movie">Movies</button>
+                <button class="filter-btn" data-filter="tv">TV Shows</button>
+            </div>
+            <div class="filter-group" id="sortFilters">
+                <button class="filter-btn active" data-sort="popular">Most Popular</button>
+                <button class="filter-btn" data-sort="top_rated">Most Rated</button>
+                <button class="filter-btn" data-sort="latest">Most Recent</button>
+            </div>
+            <div class="filter-group" id="genreFilters">
+                <button class="filter-btn active" data-genre="all">All Genres</button>
+                <button class="filter-btn" data-genre="28">Action</button>
+                <button class="filter-btn" data-genre="12">Adventure</button>
+                <button class="filter-btn" data-genre="16">Animation</button>
+                <button class="filter-btn" data-genre="35">Comedy</button>
+                <button class="filter-btn" data-genre="80">Crime</button>
+                <button class="filter-btn" data-genre="99">Documentary</button>
+                <button class="filter-btn" data-genre="18">Drama</button>
+                <button class="filter-btn" data-genre="10751">Family</button>
+                <button class="filter-btn" data-genre="14">Fantasy</button>
+                <button class="filter-btn" data-genre="36">History</button>
+                <button class="filter-btn" data-genre="27">Horror</button>
+                <button class="filter-btn" data-genre="10402">Music</button>
+                <button class="filter-btn" data-genre="9648">Mystery</button>
+                <button class="filter-btn" data-genre="10749">Romance</button>
+                <button class="filter-btn" data-genre="878">Sci-Fi</button>
+                <button class="filter-btn" data-genre="10770">TV Movie</button>
+                <button class="filter-btn" data-genre="53">Thriller</button>
+                <button class="filter-btn" data-genre="10752">War</button>
+                <button class="filter-btn" data-genre="37">Western</button>
             </div>
         </div>
-        
-        <div class="movie-grid" id="browseGrid">
-            <div class="loading">Loading movies...</div>
-        </div>
-        
-        <div class="pagination" id="pagination"></div>
+
+        <div class="movie-grid" id="browseGrid"></div>
+        <div id="loadingTrigger"></div>
     </main>
 
     <div id="playerModal" class="modal">
@@ -140,54 +167,149 @@
 
     <script src="app.js"></script>
     <script>
-        let currentPage = 1;
-        let currentType = 'all';
-        
-        async function loadBrowse(page = 1, type = 'all') {
-            const grid = document.getElementById('browseGrid');
-            grid.innerHTML = '<div class="loading-more">Loading...</div>';
-            
-            let movies = [];
-            
-            if (type === 'all' || type === 'movie') {
-                const movieRes = await fetchAPI('/movie/popular?page=' + page);
-                if (movieRes?.results) movies.push(...movieRes.results);
+        let browseState = {
+            type: 'all',       // all | movie | tv
+            sort: 'popular',   // popular | top_rated | latest
+            genre: 'all',      // all | genre_id
+            page: 1,
+            isLoading: false,
+            hasMore: true,
+            allMovies: []
+        };
+
+        async function buildEndpoint() {
+            const { type, sort, genre, page } = browseState;
+            let endpoint = '';
+
+            if (type === 'all') {
+                if (sort === 'popular') endpoint = '/trending/all/day';
+                else if (sort === 'top_rated') endpoint = '/movie/top_rated';
+                else endpoint = '/trending/all/day';
+            } else if (type === 'movie') {
+                if (sort === 'popular') endpoint = '/movie/popular';
+                else if (sort === 'top_rated') endpoint = '/movie/top_rated';
+                else endpoint = '/movie/now_playing';
+            } else {
+                if (sort === 'popular') endpoint = '/tv/popular';
+                else if (sort === 'top_rated') endpoint = '/tv/top_rated';
+                else endpoint = '/tv/airing_today';
             }
-            
-            if (type === 'all' || type === 'tv') {
-                const tvRes = await fetchAPI('/tv/popular?page=' + page);
-                if (tvRes?.results) {
-                    tvRes.results.forEach(m => m.media_type = 'tv');
-                    movies.push(...tvRes.results);
+
+            let params = `?page=${page}`;
+            if (genre !== 'all') {
+                params += `&with_genres=${genre}`;
+            }
+
+            return endpoint + params;
+        }
+
+        async function loadBrowse() {
+            if (browseState.isLoading || !browseState.hasMore) return;
+            browseState.isLoading = true;
+
+            const grid = document.getElementById('browseGrid');
+            if (browseState.page === 1) grid.innerHTML = '<div class="loading-more">Loading...</div>';
+            else grid.insertAdjacentHTML('beforeend', '<div class="loading-more">Loading more...</div>');
+
+            const endpoint = await buildEndpoint();
+            const data = await fetchAPI(endpoint);
+
+            const loaders = grid.querySelectorAll('.loading-more');
+            loaders.forEach(l => l.remove());
+
+            if (data?.results) {
+                data.results.forEach(m => {
+                    if (!m.media_type) {
+                        m.media_type = m.first_air_date ? 'tv' : 'movie';
+                    }
+                });
+
+                let movies = data.results;
+                if (browseState.genre !== 'all') {
+                    const genreId = parseInt(browseState.genre, 10);
+                    movies = movies.filter(m => m.genre_ids && m.genre_ids.includes(genreId));
+                }
+
+                const existingIds = new Set(browseState.allMovies.map(m => m.id));
+                const newMovies = movies.filter(m => !existingIds.has(m.id));
+                browseState.allMovies.push(...newMovies);
+
+                if (browseState.page === 1) {
+                    grid.innerHTML = newMovies.map((m, i) => createCard(m, i)).join('');
+                } else {
+                    grid.insertAdjacentHTML('beforeend', newMovies.map((m, i) => createCard(m, i)).join(''));
+                }
+
+                if (data.page >= data.total_pages || newMovies.length === 0) {
+                    browseState.hasMore = false;
+                    grid.insertAdjacentHTML('beforeend', '<div class="end-message">No more results</div>');
+                }
+            } else {
+                browseState.hasMore = false;
+                if (browseState.page === 1) {
+                    grid.innerHTML = '<div class="end-message">No results found</div>';
+                } else {
+                    grid.insertAdjacentHTML('beforeend', '<div class="end-message">No more results</div>');
                 }
             }
-            
-            // Sort by popularity
-            movies.sort((a, b) => b.popularity - a.popularity);
-            
-            grid.innerHTML = movies.map((m, i) => createCard(m, i)).join('');
-            
-            // Pagination
-            const pagination = document.getElementById('pagination');
-            let pages = '';
-            for (let i = 1; i <= 5; i++) {
-                pages += `<button class="page-btn ${i === page ? 'active' : ''}" onclick="loadBrowse(${i}, '${type}')">${i}</button>`;
-            }
-            pagination.innerHTML = pages;
+
+            browseState.isLoading = false;
         }
-        
-        // Filter buttons
-        document.querySelectorAll('.filter-btn').forEach(btn => {
+
+        function resetBrowse() {
+            browseState = {
+                type: browseState.type,
+                sort: browseState.sort,
+                genre: browseState.genre,
+                page: 1,
+                isLoading: false,
+                hasMore: true,
+                allMovies: []
+            };
+            document.getElementById('browseGrid').innerHTML = '';
+            loadBrowse();
+        }
+
+        // Filter button handlers
+        document.querySelectorAll('#typeFilters .filter-btn').forEach(btn => {
             btn.addEventListener('click', () => {
-                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('#typeFilters .filter-btn').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
-                currentType = btn.dataset.type;
-                currentPage = 1;
-                loadBrowse(1, currentType);
+                browseState.type = btn.dataset.filter;
+                resetBrowse();
             });
         });
-        
-        // Modal close
+
+        document.querySelectorAll('#sortFilters .filter-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('#sortFilters .filter-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                browseState.sort = btn.dataset.sort;
+                resetBrowse();
+            });
+        });
+
+        document.querySelectorAll('#genreFilters .filter-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('#genreFilters .filter-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                browseState.genre = btn.dataset.genre;
+                resetBrowse();
+            });
+        });
+
+        // Infinite scroll
+        const loadingTrigger = document.getElementById('loadingTrigger');
+        const observer = new IntersectionObserver((entries) => {
+            if (entries[0].isIntersecting && !browseState.isLoading && browseState.hasMore) {
+                browseState.page++;
+                loadBrowse();
+            }
+        }, { rootMargin: '200px' });
+
+        observer.observe(loadingTrigger);
+
+        // Modal handlers
         document.getElementById('modalClose').addEventListener('click', closePlayer);
         document.getElementById('playerModal').addEventListener('click', (e) => {
             if (e.target.classList.contains('modal-backdrop')) closePlayer();
@@ -195,26 +317,24 @@
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') closePlayer();
         });
-        
-        // Season/Episode selector listeners
+
+        // Season/Episode listeners
         const seasonSelect = document.getElementById('seasonSelect');
         const episodeSelect = document.getElementById('episodeSelect');
-        
         if (seasonSelect) {
             seasonSelect.addEventListener('change', () => {
                 currentPlayback.season = parseInt(seasonSelect.value, 10);
                 updatePlayerSource();
             });
         }
-        
         if (episodeSelect) {
             episodeSelect.addEventListener('change', () => {
                 currentPlayback.episode = parseInt(episodeSelect.value, 10);
                 updatePlayerSource();
             });
         }
-        
-        // Load on page load
+
+        // Initial load
         loadBrowse();
     </script>
 </body>
