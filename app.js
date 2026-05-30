@@ -100,9 +100,9 @@ document.addEventListener('click', (e) => {
 // Vidking Player URL builder
 function getVidkingUrl(tmdbId, type = 'movie', season = 1, episode = 1) {
     if (type === 'tv') {
-        return `https://www.vidking.net/embed/tv/${tmdbId}/${season}/${episode}?color=e50914&autoPlay=true`;
+        return `https://www.vidking.net/embed/tv/${tmdbId}/${season}/${episode}?color=e50914`;
     }
-    return `https://www.vidking.net/embed/movie/${tmdbId}?color=e50914&autoPlay=true`;
+    return `https://www.vidking.net/embed/movie/${tmdbId}?color=e50914`;
 }
 
 // Current playback state
@@ -214,7 +214,11 @@ function updatePlayerSource() {
         currentPlayback.season, 
         currentPlayback.episode
     );
-    iframe.src = url;
+    // Force reload by clearing src first
+    iframe.src = '';
+    requestAnimationFrame(() => {
+        iframe.src = url;
+    });
 }
 
 // Open player modal
@@ -237,6 +241,10 @@ async function openPlayer(movie) {
         title: movie.title
     };
     
+    // Show modal first so iframe loads in visible context
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+    
     // Show/hide season/episode selector
     if (seSelector) {
         seSelector.style.display = type === 'tv' ? 'flex' : 'none';
@@ -247,9 +255,10 @@ async function openPlayer(movie) {
         await populateSelectorsForShow(movie.id);
     }
     
+    // Set iframe src after modal is visible
     const url = getVidkingUrl(movie.id, type, 1, 1);
-    
     iframe.src = url;
+    
     title.textContent = movie.title;
     meta.innerHTML = `
         <span class="rating">${movie.rating}</span>
@@ -257,9 +266,6 @@ async function openPlayer(movie) {
         <span class="genre">${type === 'tv' ? 'TV Show' : 'Movie'}</span>
     `;
     desc.textContent = movie.desc || '';
-    
-    modal.classList.add('active');
-    document.body.style.overflow = 'hidden';
 }
 
 // Close player modal
