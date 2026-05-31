@@ -40,8 +40,10 @@ function createCard(movie, index, isTop10 = false) {
     const displayType = type === 'tv' ? 'TV Show' : 'Movie';
     const desc = (movie.overview || '').slice(0, 200);
     
+    const imdbId = movie.imdb_id || movie.external_ids?.imdb_id || '';
+    
     return `
-        <div class="${cardClass}" data-id="${movie.id}" data-type="${type}" data-title="${escapeHtml(title)}" data-rating="${rating}" data-year="${year}" data-desc="${escapeHtml(desc)}" data-poster="${poster}">
+        <div class="${cardClass}" data-id="${movie.id}" data-type="${type}" data-title="${escapeHtml(title)}" data-rating="${rating}" data-year="${year}" data-desc="${escapeHtml(desc)}" data-poster="${poster}" data-imdb-id="${imdbId}">
             <div class="card-image">
                 ${rankBadge}
                 <img src="${poster}" alt="${escapeHtml(title)}" loading="lazy" onerror="this.src='https://via.placeholder.com/342x513/1a1a1a/666?text=${encodeURIComponent(title)}'">
@@ -93,22 +95,75 @@ document.addEventListener('click', (e) => {
     const year = card.dataset.year;
     const desc = card.dataset.desc;
     const poster = card.dataset.poster;
+    const imdbId = card.dataset.imdbId || '';
     
-    openPlayer({ id, type, title, rating, year, desc, poster });
+    openPlayer({ id, type, title, rating, year, desc, poster, imdbId });
 });
 
 // Embed providers - tried in order, fallback on failure
-function getEmbedUrls(tmdbId, type = 'movie', season = 1, episode = 1) {
+// Embed providers - tries VidKing first, then Videasy (with decryption via enc-dec.app)
+async function getEmbedSources(tmdbId, type = 'movie', season = 1, episode = 1, title = '', year = '', imdbId = '') {
     const providers = [];
+    
+    // VidKing (direct embed)
     if (type === 'tv') {
-        providers.push(`https://www.vidking.net/embed/tv/${tmdbId}/${season}/${episode}?color=e50914`);
-        providers.push(`https://multiembed.mov/directstream.php?video_id=${tmdbId}&tmdb=1&s=${season}&e=${episode}`);
-        providers.push(`https://autoembed.cc/embed/tmdb/tv/${tmdbId}/${season}/${episode}`);
+        providers.push({
+            name: 'VidKing',
+            url: `https://www.vidking.net/embed/tv/${tmdbId}/${season}/${episode}?color=e50914`,
+            type: 'direct'
+        });
     } else {
-        providers.push(`https://www.vidking.net/embed/movie/${tmdbId}?color=e50914`);
-        providers.push(`https://multiembed.mov/directstream.php?video_id=${tmdbId}&tmdb=1`);
-        providers.push(`https://autoembed.cc/embed/tmdb/movie/${tmdbId}`);
+        providers.push({
+            name: 'VidKing',
+            url: `https://www.vidking.net/embed/movie/${tmdbId}?color=e50914`,
+            type: 'direct'
+        });
     }
+    
+    // Videasy (requires API call + decryption)
+    try {
+        const encTitle = encodeURIComponent(encodeURIComponent(title || ''));
+        const server = 'cdn'; // Try CDN server first
+        let videasyUrl = `https://api.videasy.net/${server}/sources-with-title?title=${encTitle}&mediaType=${type}&year=${year}&tmdbId=${tmdbId}`;
+        if (imdbId) videasyUrl += `&imdbId=${imdbId}`;
+        if (type === 'tv') {
+            videasyUrl += `&seasonId=${season}&episodeId=${episode}`;
+        }
+        
+        const encResponse = await fetch(videasyUrl, {
+            headers: {
+                'Accept': '*/*',
+                'Origin': 'https://cineby.sc',
+                'Referer': 'https://cineby.sc/',
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+            }
+        });
+        const encData = await encResponse.text();
+        
+        // Decrypt via enc-dec.app
+        const decResponse = await fetch('https://enc-dec.app/api/dec-videasy', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text: encData, id: tmdbId })
+        });
+        const decData = await decResponse.json();
+        
+        if (decData.status === 200 && decData.result) {
+            const sources = JSON.parse(decData.result);
+            if (sources.sources && sources.sources.length > 0) {
+                // Add the first source as a fallback
+                providers.push({
+                    name: 'Videasy',
+                    url: sources.sources[0].url,
+                    type: 'hls',
+                    headers: sources.sources[0].headers || {}
+                });
+            }
+        }
+    } catch (e) {
+        console.log('Videasy fetch failed:', e);
+    }
+    
     return providers;
 }
 
@@ -211,17 +266,20 @@ function updateEpisodeCountForSeason(seasonNum) {
 }
 
 // Update player URL based on current selections
-function updatePlayerSource() {
+async function updatePlayerSource() {
     const iframe = document.getElementById('vidkingPlayer');
     if (!iframe || !currentPlayback.id) return;
     
-    const urls = getEmbedUrls(
+    const providers = await getEmbedSources(
         currentPlayback.id, 
         currentPlayback.type, 
         currentPlayback.season, 
         currentPlayback.episode
     );
-    iframe.src = urls[0];
+    // Load first URL (VidKing), others are fallbacks
+    if (providers.length > 0) {
+        iframe.src = providers[0].url;
+    }
 }
 
 // Open player modal
@@ -259,11 +317,11 @@ async function openPlayer(movie) {
     }
     
     // Get all embed URLs and load the first one
-    const urls = getEmbedUrls(movie.id, type, 1, 1);
-    iframe.src = urls[0];
+    const providers = await getEmbedSources(movie.id, type, 1, 1, movie.title, movie.year, movie.imdbId);
+    iframe.src = providers[0].url;
     
     // Build server switcher
-    buildServerSwitcher(urls);
+    buildServerSwitcher(providers);
     
     title.textContent = movie.title;
     meta.innerHTML = `
@@ -275,7 +333,7 @@ async function openPlayer(movie) {
 }
 
 // Build server switcher buttons
-function buildServerSwitcher(urls) {
+function buildServerSwitcher(providers) {
     let container = document.getElementById('serverSwitcher');
     if (!container) {
         container = document.createElement('div');
@@ -287,13 +345,12 @@ function buildServerSwitcher(urls) {
         }
     }
     container.innerHTML = '';
-    const names = ['VidKing'];
-    urls.forEach((url, i) => {
+    providers.forEach((provider, i) => {
         const btn = document.createElement('button');
         btn.className = 'server-btn';
-        btn.textContent = names[i] || `Server ${i+1}`;
+        btn.textContent = provider.name;
         btn.onclick = () => {
-            document.getElementById('vidkingPlayer').src = url;
+            document.getElementById('vidkingPlayer').src = provider.url;
             document.querySelectorAll('.server-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
         };
