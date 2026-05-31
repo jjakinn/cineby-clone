@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Search - Vivid</title>
+    <meta name="referrer" content="no-referrer-when-downgrade">
     <link rel="stylesheet" href="styles.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -163,7 +164,7 @@
                 <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
             </button>
             <div class="player-wrapper">
-                <iframe id="vidkingPlayer" src="" width="100%" height="100%" frameborder="0" allowfullscreen allow="autoplay *; fullscreen *; encrypted-media *; picture-in-picture *; display-capture *; clipboard-read *; clipboard-write *"></iframe>
+                <iframe id="vidkingPlayer" src="" width="100%" height="100%" frameborder="0" allowfullscreen allow="autoplay *; fullscreen *; encrypted-media *; picture-in-picture *" sandbox="allow-same-origin allow-scripts allow-popups allow-popups-to-escape-sandbox" name="vidking-embed"></iframe>
             </div>
             <div class="movie-details" id="movieDetails">
                 <h2 id="detailTitle"></h2>
