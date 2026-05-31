@@ -102,12 +102,12 @@ function getEmbedUrls(tmdbId, type = 'movie', season = 1, episode = 1) {
     const providers = [];
     if (type === 'tv') {
         providers.push(`https://www.vidking.net/embed/tv/${tmdbId}/${season}/${episode}?color=e50914`);
-        providers.push(`https://vidsrc.to/embed/tv/${tmdbId}/${season}/${episode}`);
-        providers.push(`https://www.2embed.ru/embed/tmdb/tv?id=${tmdbId}&s=${season}&e=${episode}`);
+        providers.push(`https://multiembed.mov/directstream.php?video_id=${tmdbId}&tmdb=1&s=${season}&e=${episode}`);
+        providers.push(`https://autoembed.cc/embed/tmdb/tv/${tmdbId}/${season}/${episode}`);
     } else {
         providers.push(`https://www.vidking.net/embed/movie/${tmdbId}?color=e50914`);
-        providers.push(`https://vidsrc.to/embed/movie/${tmdbId}`);
-        providers.push(`https://www.2embed.ru/embed/tmdb/movie?id=${tmdbId}`);
+        providers.push(`https://multiembed.mov/directstream.php?video_id=${tmdbId}&tmdb=1`);
+        providers.push(`https://autoembed.cc/embed/tmdb/movie/${tmdbId}`);
     }
     return providers;
 }
@@ -287,7 +287,7 @@ function buildServerSwitcher(urls) {
         }
     }
     container.innerHTML = '';
-    const names = ['VidKing', 'VidSrc', '2Embed'];
+    const names = ['VidKing', 'MultiEmbed', 'AutoEmbed'];
     urls.forEach((url, i) => {
         const btn = document.createElement('button');
         btn.className = 'server-btn';
