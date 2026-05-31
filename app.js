@@ -214,13 +214,13 @@ function updatePlayerSource() {
     const iframe = document.getElementById('vidkingPlayer');
     if (!iframe || !currentPlayback.id) return;
     
-    const url = getVidkingUrl(
+    const urls = getEmbedUrls(
         currentPlayback.id, 
         currentPlayback.type, 
         currentPlayback.season, 
         currentPlayback.episode
     );
-    iframe.src = url;
+    iframe.src = urls[0];
 }
 
 // Open player modal
