@@ -287,7 +287,7 @@ function buildServerSwitcher(urls) {
         }
     }
     container.innerHTML = '';
-    const names = ['VidKing', 'MultiEmbed', 'AutoEmbed'];
+    const names = ['VidKing'];
     urls.forEach((url, i) => {
         const btn = document.createElement('button');
         btn.className = 'server-btn';
