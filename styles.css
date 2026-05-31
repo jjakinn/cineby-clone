@@ -685,7 +685,13 @@ body {
     }
     
     .nav {
-        display: none;
+        display: flex;
+        gap: 12px;
+    }
+    
+    .nav-link {
+        font-size: 13px;
+        padding: 6px 10px;
     }
     
     .hero {
