@@ -97,17 +97,12 @@ document.addEventListener('click', (e) => {
     openPlayer({ id, type, title, rating, year, desc, poster });
 });
 
-// Embed providers - tried in order, fallback on failure
-function getEmbedUrls(tmdbId, type = 'movie', season = 1, episode = 1) {
-    const providers = [];
+// VidKing embed URL
+function getVidkingUrl(tmdbId, type = 'movie', season = 1, episode = 1) {
     if (type === 'tv') {
-        providers.push(`https://www.vidking.net/embed/tv/${tmdbId}/${season}/${episode}?color=e50914`);
-        providers.push(`https://www.2embed.ru/embed/tmdb/tv?id=${tmdbId}&s=${season}&e=${episode}`);
-    } else {
-        providers.push(`https://www.vidking.net/embed/movie/${tmdbId}?color=e50914`);
-        providers.push(`https://www.2embed.ru/embed/tmdb/movie?id=${tmdbId}`);
+        return `https://www.vidking.net/embed/tv/${tmdbId}/${season}/${episode}?color=e50914`;
     }
-    return providers;
+    return `https://www.vidking.net/embed/movie/${tmdbId}?color=e50914`;
 }
 
 // Current playback state
@@ -213,14 +208,13 @@ function updatePlayerSource() {
     const iframe = document.getElementById('vidkingPlayer');
     if (!iframe || !currentPlayback.id) return;
     
-    const urls = getEmbedUrls(
+    const url = getVidkingUrl(
         currentPlayback.id, 
         currentPlayback.type, 
         currentPlayback.season, 
         currentPlayback.episode
     );
-    // Load first URL, others are fallbacks if user needs to retry
-    iframe.src = urls[0];
+    iframe.src = url;
 }
 
 // Open player modal
@@ -257,12 +251,8 @@ async function openPlayer(movie) {
         await populateSelectorsForShow(movie.id);
     }
     
-    // Get all embed URLs and load the first one
-    const urls = getEmbedUrls(movie.id, type, 1, 1);
-    iframe.src = urls[0];
-    
-    // Build server switcher
-    buildServerSwitcher(urls);
+    const url = getVidkingUrl(movie.id, type, 1, 1);
+    iframe.src = url;
     
     title.textContent = movie.title;
     meta.innerHTML = `
@@ -271,34 +261,6 @@ async function openPlayer(movie) {
         <span class="genre">${type === 'tv' ? 'TV Show' : 'Movie'}</span>
     `;
     desc.textContent = movie.desc || '';
-}
-
-// Build server switcher buttons
-function buildServerSwitcher(urls) {
-    let container = document.getElementById('serverSwitcher');
-    if (!container) {
-        container = document.createElement('div');
-        container.id = 'serverSwitcher';
-        container.className = 'server-switcher';
-        const modalContent = document.querySelector('.modal-content');
-        if (modalContent) {
-            modalContent.insertBefore(container, document.querySelector('.movie-details'));
-        }
-    }
-    container.innerHTML = '';
-    const names = ['VidKing', '2Embed'];
-    urls.forEach((url, i) => {
-        const btn = document.createElement('button');
-        btn.className = 'server-btn';
-        btn.textContent = names[i] || `Server ${i+1}`;
-        btn.onclick = () => {
-            document.getElementById('vidkingPlayer').src = url;
-            document.querySelectorAll('.server-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-        };
-        if (i === 0) btn.classList.add('active');
-        container.appendChild(btn);
-    });
 }
 
 // Close player modal
@@ -583,27 +545,6 @@ style.textContent = `
         padding: 40px;
         text-align: center;
         font-size: 14px;
-    }
-    .server-switcher {
-        display: flex;
-        gap: 8px;
-        padding: 12px 0;
-        flex-wrap: wrap;
-    }
-    .server-btn {
-        background: rgba(255,255,255,0.1);
-        border: none;
-        color: #fff;
-        padding: 6px 14px;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 13px;
-    }
-    .server-btn:hover {
-        background: rgba(255,255,255,0.2);
-    }
-    .server-btn.active {
-        background: var(--red-accent);
     }
 `;
 document.head.appendChild(style);
